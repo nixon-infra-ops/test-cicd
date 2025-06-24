@@ -1,0 +1,47 @@
+trigger:
+  branches:
+    include:
+      - main  # change if using a different default branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  NODE_OPTIONS: '--max_old_space_size=4096'
+
+steps:
+# Install Node and Yarn
+- task: UseNode@1
+  inputs:
+    version: '18.x'
+  displayName: 'Use Node.js 18'
+
+- script: |
+    corepack enable
+    yarn install --frozen-lockfile
+  displayName: 'Install dependencies'
+
+# Run Nx export
+- script: |
+    yarn nx export-web wallet
+  displayName: 'Export Wallet App'
+
+# Add test output (optional)
+- script: |
+    echo "This is run by CI/CD" > test-cicd.txt
+  displayName: 'Write test file'
+
+# Download GCP service account key
+- task: DownloadSecureFile@1
+  name: gcpKey
+  inputs:
+    secureFile: 'gcp-key.json'
+
+# Authenticate and deploy to GCS
+- script: |
+    curl https://sdk.cloud.google.com | bash > /dev/null
+    source $HOME/google-cloud-sdk/path.bash.inc
+    gcloud auth activate-service-account --key-file=$(gcpKey.secureFilePath)
+    gcloud config set project your-project-id
+    gsutil -m cp -r -Z -a public-read -h "Cache-Control:no-cache" apps/wallet/web-build/* gs://test-cicd-nix-20250624
+  displayName: 'Deploy exported web build to GCS'
