@@ -42,6 +42,6 @@ steps:
     curl https://sdk.cloud.google.com | bash > /dev/null
     source $HOME/google-cloud-sdk/path.bash.inc
     gcloud auth activate-service-account --key-file=$(gcpKey.secureFilePath)
-    gcloud config set project your-project-id
+    gcloud config set project vatom-459619
     gsutil -m cp -r -Z -a public-read -h "Cache-Control:no-cache" apps/wallet/web-build/* gs://test-cicd-nix-20250624
   displayName: 'Deploy exported web build to GCS'
