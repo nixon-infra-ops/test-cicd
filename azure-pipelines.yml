@@ -17,16 +17,11 @@ steps:
   workingDirectory: sample-app
   displayName: 'Install dependencies (Vite app)'
 
-# Build the Vite app
+# Build the wallet app using Nx export
 - script: |
-    yarn build
+    yarn nx export-web wallet
   workingDirectory: sample-app
-  displayName: 'Build Vite App'
-
-# Add test file (optional)
-- script: |
-    echo "This is run by CI/CD" > test-cicd.txt
-  displayName: 'Write test file'
+  displayName: 'Export wallet web app'
 
 # Download GCP service account key
 - task: DownloadSecureFile@1
@@ -34,7 +29,7 @@ steps:
   inputs:
     secureFile: 'gcp-key.json'
 
-# Authenticate and deploy to GCS
+# Authenticate and deploy using gcloud storage cp
 - script: |
     echo "Activating service account..."
     gcloud auth activate-service-account --key-file=$(gcpKey.secureFilePath)
@@ -42,10 +37,13 @@ steps:
     echo "Setting GCP project..."
     gcloud config set project vatom-459619
 
-    echo "Uploading build to GCS..."
-    gsutil -m cp -r -h "Cache-Control:no-cache" sample-app/dist/* gs://test-cicd-nix-20250624
+    echo "Checking exported build directory..."
+    ls -la apps/wallet/web-build || { echo 'Build directory not found'; exit 1; }
 
-    echo "Making uploaded files public..."
-    gsutil -m acl ch -r -u AllUsers:R gs://test-cicd-nix-20250624
-  displayName: 'Deploy to GCP Bucket'
+    echo "Uploading with gcloud storage cp..."
+    gcloud storage cp -r \
+      --cache-control="no-cache" \
+      apps/wallet/web-build/* gs://wallet-app-bucket-dev
+  workingDirectory: sample-app
+  displayName: 'Deploy wallet app to GCP bucket'
   failOnStderr: true
