@@ -45,5 +45,5 @@ steps:
     source $HOME/google-cloud-sdk/path.bash.inc
     gcloud auth activate-service-account --key-file=$(gcpKey.secureFilePath)
     gcloud config set project vatom-459619
-    gsutil -m cp -r -Z -a public-read -h "Cache-Control:no-cache" sample-app/dist/* gs://test-cicd-nix-20250624
+    gsutil -m cp -r -h "Cache-Control:no-cache" sample-app/dist/* gs://test-cicd-nix-20250624
   displayName: 'Deploy to GCP Bucket'
