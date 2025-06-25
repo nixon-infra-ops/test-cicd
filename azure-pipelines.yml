@@ -48,9 +48,6 @@ steps:
     if [ -d "sample-app/dist" ] && [ "$(ls -A sample-app/dist)" ]; then
       echo "Uploading build using gcloud storage cp..."
       gcloud storage cp -r --cache-control="no-cache" sample-app/dist/* gs://test-cicd-nix-20250624
-
-      echo "Making uploaded files public..."
-      gcloud storage objects update --add-acl-grant=allUsers:READER gs://test-cicd-nix-20250624/**
     else
       echo "ERROR: dist folder is empty or not found"
       exit 1
